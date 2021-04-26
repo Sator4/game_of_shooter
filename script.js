@@ -18,7 +18,7 @@ let still_alive = true;
 
 function main(){                ///////////////////////////   MAIN  ///////////////////////////////
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = "35px Calibri";
+    ctx.font = "30px Calibri";
     ctx.fillText("Press S for playing with keyboard", canvas.width * 0.05, canvas.height * 0.05);
     ctx.fillText("or", canvas.width * 0.2, canvas.height * 0.1);
     ctx.fillText("Press left mouse key to play with mouse", canvas.width * 0.05, canvas.height * 0.15);
