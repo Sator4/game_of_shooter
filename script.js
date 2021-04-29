@@ -19,13 +19,10 @@ let sprites = {
     
     initial(){
         this.meteorImg.src = "images/meteor.jpg";
-        this.meteorImg.style.width = '60px';
-        
         this.shipImg.src = "images/ship.jpg";
-        this.shipImg.style.width = '60px';
-
         this.immortalShipImg.src = "images/immortal_ship.jpg";
-        this.immortalShipImg.style.width = '60px';
+        this.enemy1Image.src = "";
+        this.Boss1Image.src = "";
     }
 }
 
@@ -394,7 +391,6 @@ let ship = new Player();
 function draw() {  // drawing everything, generating enemies and controll ship
     if (game_state == "menu"){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font
         ctx.fillText("Press space to play with keyboard", canvas.width * 0.05, canvas.height * 0.05);
         ctx.fillText("or", canvas.width * 0.2, canvas.height * 0.1);
         ctx.fillText("Press left mouse key to play with mouse", canvas.width * 0.05, canvas.height * 0.15);
@@ -404,8 +400,8 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (spacePressed){
             game_state = "playing";
             play_type = "keyboard";
-            game_stage = 2; // 1
-            waves_left = 1; // 2
+            game_stage = 1;
+            waves_left = 2;
             until_next_wave = 10000;
         }
     }
@@ -431,8 +427,8 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (obstacles.length > 0){  // displaying meteors
             for (let i = 0; i < obstacles.length; i++){
                 obstacles[i].move();
-                // ctx.drawImage(sprites.meteorImg, obstacles[i].position_x, obstacles[i].position_y);
-                ctx.fillText("M", obstacles[i].position_x, obstacles[i].position_y);
+                ctx.drawImage(sprites.meteorImg, obstacles[i].position_x, obstacles[i].position_y);
+                //ctx.fillText("M", obstacles[i].position_x, obstacles[i].position_y);
             }
         }
 
@@ -536,7 +532,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
             ship.keyboard_move();
             if (immortality_ticks_left == 0){
                 ctx.fillText("S", ship.position_x, ship.position_y);
-                // ctx.drawImage(sprites.shipImg, ship.position_x, ship.position_y);
+                //ctx.drawImage(sprites.shipImg, ship.position_x, ship.position_y);
             }
             else {
                 immortality_ticks_left--;
@@ -566,8 +562,8 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (play_type == "keyboard"){
             ctx.fillText("Press S to go to main menu", canvas.width * 0.25, canvas.height * 0.35);
         }
-        else if (play_type == "mouse"){   // tba
-
+        else if (play_type == "mouse"){
+            ctx.fillText("Press left mouse key to go to main menu", canvas.width * 0.25, canvas.height * 0.35);
         }
         else if (play_type == "touchscreen"){ // tba
 
