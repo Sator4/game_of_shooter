@@ -456,7 +456,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (game_stage == 1){
             if ((enemies.length == 0 || until_next_wave == 0) && waves_left > 0){//если волны еще будут и врагов нет или начинается след. волна
                 for (let i = 0; i < 5; i++){
-                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) - 50), -50, "common1", 30, 30);
+                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) + 50), -50, "common1", 30, 30);
                 }
                 until_next_wave = 1000;
                 waves_left--;
@@ -485,7 +485,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (game_stage == 3){
             if ((enemies.length == 0 || until_next_wave == 0) && waves_left > 0){
                 for (let i = 0; i < 5; i++){
-                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) - 50), -50, "common2", 30, 30);
+                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) + 50), -50, "common2", 30, 30);
                 }
                 until_next_wave = 1500;
                 waves_left--;
