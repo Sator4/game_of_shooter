@@ -18,9 +18,9 @@ let sprites = {
     Boss1Image : new Image(),
     
     initial(){
-        this.meteorImg.src = "images/meteor.jpg";
-        this.shipImg.src = "images/ship.jpg";
-        this.immortalShipImg.src = "images/immortal_ship.jpg";
+        this.meteorImg.src = "images/meteor.png";
+        this.shipImg.src = "images/ship.png";
+        this.immortalShipImg.src = "images/immortal_ship.png";
         this.enemy1Image.src = "";
         this.Boss1Image.src = "";
     }
@@ -427,8 +427,8 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (obstacles.length > 0){  // displaying meteors
             for (let i = 0; i < obstacles.length; i++){
                 obstacles[i].move();
-                ctx.drawImage(sprites.meteorImg, obstacles[i].position_x, obstacles[i].position_y);
-                //ctx.fillText("M", obstacles[i].position_x, obstacles[i].position_y);
+                //ctx.drawImage(sprites.meteorImg, obstacles[i].position_x, obstacles[i].position_y);
+                ctx.fillText("M", obstacles[i].position_x, obstacles[i].position_y);
             }
         }
 
