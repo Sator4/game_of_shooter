@@ -145,6 +145,21 @@ class Enemy extends Danger {
             this.health = 20;
             this.type = "boss1";
         }
+        if (type == "common2"){
+            this.dx = Math.floor(Math.random() * 3) - 1;
+            this.dy = 1;
+            this.reload_ticks_left = Math.floor(Math.random() * 100) + 100;
+            this.health = 5;
+            this.type = "common2";
+        }
+        if (type == "boss2"){
+            this.dx = Math.floor(Math.random() * 3) - 1;
+            this.dy = 1;
+            this.reload_ticks_left = 200;
+            this.reload_special_weapon_ticks_left = 750;
+            this.health = 40;
+            this.type = "boss2";
+        }
         enemies.push(this);
     }
 
@@ -205,6 +220,57 @@ class Enemy extends Danger {
                 let y_speed = -Math.floor((this.position_y - ship.position_y) * (10 / distance));
                 let new_unguided_missile = new Bullet(this.position_x, this.position_y + 50, x_speed, y_speed, "unguided_missile");
                 this.reload_special_weapon_ticks_left = 250;
+            }
+        }
+
+        if (this.type == "common2"){
+            if (this.health <= 0){
+                ship.score += 100;
+                this.delete_this();
+            }
+            if (this.reload_ticks_left > 0){
+                this.reload_ticks_left--;
+            }
+            else {
+                let new_enemy_bullet_1 = new Bullet(this.position_x + 20, this.position_y + 30, 0, 3, "foe");
+                let new_enemy_bullet_2 = new Bullet(this.position_x - 20, this.position_y + 30, 0, 3, "foe");
+                this.reload_ticks_left = 150;
+            }
+        }
+
+        if (this.type == "boss2"){
+            if (this.health <= 0){
+                ship.score += 2000;
+                this.delete_this();
+            }
+            if (this.reload_ticks_left > 0){
+                this.reload_ticks_left--;
+            }
+            else {
+                let new_enemy_bullet_l = new Bullet(this.position_x, this.position_y + 50, -3, 5, "foe");
+                let new_enemy_bullet_c = new Bullet(this.position_x, this.position_y + 50, 0, 5, "foe");
+                let new_enemy_bullet_r = new Bullet(this.position_x, this.position_y + 50, 3, 5, "foe");
+                this.reload_ticks_left = 200;
+            }
+
+            if (this.reload_special_weapon_ticks_left > 0){
+                this.reload_special_weapon_ticks_left--;
+            }
+            else {
+                let bos_bullet_1 = new Bullet(this.position_x, this.position_y + 50, 9, 1, "foe");
+                let bos_bullet_2 = new Bullet(this.position_x, this.position_y + 50, 8, 2, "foe");
+                let bos_bullet_3 = new Bullet(this.position_x, this.position_y + 50, 7, 3, "foe");
+                let bos_bullet_4 = new Bullet(this.position_x, this.position_y + 50, 6, 4, "foe");
+                let bos_bullet_5 = new Bullet(this.position_x, this.position_y + 50, 4, 5, "foe");
+                let bos_bullet_6 = new Bullet(this.position_x, this.position_y + 50, 2, 6, "foe");
+                let bos_bullet_7 = new Bullet(this.position_x, this.position_y + 50, 0, 6, "foe");
+                let bos_bullet_8 = new Bullet(this.position_x, this.position_y + 50, -2, 6, "foe");
+                let bos_bullet_9 = new Bullet(this.position_x, this.position_y + 50, -4, 5, "foe");
+                let bos_bullet_10 = new Bullet(this.position_x, this.position_y + 50, -6, 4, "foe");
+                let bos_bullet_11 = new Bullet(this.position_x, this.position_y + 50, -7, 3, "foe");
+                let bos_bullet_12 = new Bullet(this.position_x, this.position_y + 50, -8, 2, "foe");
+                let bos_bullet_13 = new Bullet(this.position_x, this.position_y + 50, -9, 1, "foe");
+                this.reload_special_weapon_ticks_left = 500;
             }
         }
     }
@@ -338,8 +404,8 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (spacePressed){
             game_state = "playing";
             play_type = "keyboard";
-            game_stage = 1;
-            waves_left = 2;
+            game_stage = 2; // 1
+            waves_left = 1; // 2
             until_next_wave = 10000;
         }
     }
@@ -412,20 +478,53 @@ function draw() {  // drawing everything, generating enemies and controll ship
             enemies[0].move();
             if (enemies.length == 0){
                 game_stage = 3;
+                waves_left = 4;
             }
         }
-         if (game_stage == 3){
-             game_state = "win";
-             ship.score += ship.health * 1000;
-         }
+
+        if (game_stage == 3){
+            if ((enemies.length == 0 || until_next_wave == 0) && waves_left > 0){
+                for (let i = 0; i < 5; i++){
+                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) - 50), -50, "common2", 30, 30);
+                }
+                until_next_wave = 1500;
+                waves_left--;
+            }
+            if (until_next_wave > 0){
+                until_next_wave--;
+            }
+            if (enemies.length == 0 && waves_left == 0){
+                waves_left = 1;
+                game_stage = 4;
+            }
+        }
+
+        if (game_stage == 4){
+            if (enemies.length == 0 && waves_left > 0){
+                boss = new Enemy(Math.floor(Math.random() * (canvas.width - 500) + 250), -100, "boss2", 50, 50);
+                waves_left--;
+            }
+            enemies[0].move();
+            if (enemies.length == 0){
+                game_stage = 5;
+            }
+        }
+
+        if (game_stage == 5){
+            game_state = "win";
+            ship.score += ship.health * 1000;
+        }
+
+
+
 
         if (enemies.length > 0){
             for (let i = 0; i < enemies.length; i++){
                 enemies[i].move();
-                if (enemies[i].type == "common1"){
+                if (enemies[i].type == "common1" || enemies[i].type == "common2"){
                     ctx.fillText("E", enemies[i].position_x, enemies[i].position_y);
                 }
-                else if (enemies[i].type == "boss1"){
+                else if (enemies[i].type == "boss1" || enemies[i].type == "boss2"){
                     ctx.font = "100px Calibri";
                     ctx.fillText("B", enemies[i].position_x, enemies[i].position_y);
                     ctx.font = "35px Calibri";
