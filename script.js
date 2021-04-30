@@ -1,13 +1,13 @@
 // deifine meteor asteroid; meteor was just easier to write and read
 
 
-
-
 let canvas = document.getElementById("playground");
 canvas.width  = window.innerWidth * 0.985;
 canvas.height = window.innerHeight * 0.97;
 let ctx = canvas.getContext("2d");
 ctx.font = "35px Calibri";
+
+let time = 0;
 
 let high_score = 0;
 let heart = "❤️", two_hearts = "❤️❤️", three_hearts = "❤️❤️❤️";
@@ -25,6 +25,7 @@ let enemy_bullets = [];
 
 let immortality_ticks_left = 0;
 let id = 0;
+let menu_mouse_delay = 50;
 let game_state = "menu";
 let play_type = "none";
 
@@ -73,6 +74,7 @@ class Player {
             game_state = "menu";
         }
         if (PPressed){
+            game_state = "pause";
         }
 
         if (this.reload_ticks_left > 0){  // reloading
@@ -102,7 +104,40 @@ class Player {
             this.reload_ticks_left = 15;
         }
     }
+    mouse_move(){
+        if (RPressed){
+            this.health = 3;
+            this.position_y = canvas.height * 0.95;
+            this.position_x = canvas.width * 0.5;
+            this.score = 0;
+            this.reload_ticks_left = 0;
+            enemies = [];
+            enemy_bullets = [];
+            my_bullets = [];
+            obstacles = [];
+            game_state = "menu";
+        }
+        if (PPressed){
+            game_state = "pause";
+        }
 
+        if (this.reload_ticks_left > 0){  // reloading
+            this.reload_ticks_left--;
+        }
+        for (let i = 0; i < obstacles.length; i++){  // checking collisions with meteors
+            if (((this.position_x + player_size - obstacles[i].position_x)**2 + 
+            (this.position_y - obstacles[i].position_y)**2)**0.5 < meteor_size / 2 + player_size / 2 && immortality_ticks_left == 0){
+                this.health--;
+                obstacles[i].health--;
+                immortality_ticks_left = 200;
+                break;
+            }
+        }
+        if (LMKPressed && this.reload_ticks_left == 0){
+            let new_my_bullet = new Bullet(this.position_x, this.position_y - player_size, 0, -10, "friend");
+            this.reload_ticks_left = 15;
+        }
+    }
 
 }
 
@@ -187,7 +222,7 @@ class Enemy extends Danger {
         }
     }
 
-    move(){
+    move(){ 
         this.position_x += this.dx;
         this.position_y += this.dy;
         if (this.position_x < common_enemy_size || this.position_x > canvas.width - common_enemy_size){
@@ -416,11 +451,40 @@ function keyUpHandler(e) {
     }
 }
 
+function mouseKeyDownHandler(e){
+    if (e.button == 0 && e.target.id == "playground"){
+        LMKPressed = true;
+    }
+    else if (e.button == 2 && e.target.id == "playground"){
+        RMKPressed = true;
+    }
+}
+function mouseKeyUpHandler(e){
+    if (e.button == 0 && e.target.id == "playground"){
+        LMKPressed = false;
+    }
+    else if (e.button == 2 && e.target.id == "playground"){
+        RMKPressed = false;
+    }
+}
+
+function mouseMoveHandler(e){
+    if (play_type == "mouse"){
+        let mouse_pos_x = e.clientX; // - canvas.offsetLeft;
+        if(mouse_pos_x > player_size / 2 && mouse_pos_x < canvas.width - player_size / 2) {
+            ship.position_x = mouse_pos_x - player_size/2;
+        }
+    }   
+}
+
 
 let ship = new Player();
 
 function draw() {  // drawing everything, generating enemies and controll ship
     if (game_state == "menu"){
+        if (menu_mouse_delay > 0){
+            menu_mouse_delay--;
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "white";
         ctx.fillText("Press space to play with keyboard (R to restart, P to pause)", canvas.width * 0.05, canvas.height * 0.05);
@@ -433,8 +497,15 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (spacePressed){
             game_state = "playing";
             play_type = "keyboard";
-            game_stage = 2;   // 1
-            waves_left = 1;   // 2
+            game_stage = 1;   // 1
+            waves_left = 2;   // 2
+            until_next_wave = 10000;
+        }
+        if (LMKPressed && menu_mouse_delay == 0){
+            game_state = "playing";
+            play_type = "mouse";
+            game_stage = 1;   // 1
+            waves_left = 2;   // 2
             until_next_wave = 10000;
         }
     }
@@ -451,6 +522,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
         }
     }
     else if (game_state == "playing"){
+        time++; 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillText("Score: " + ship.score, canvas.width * 0.01, canvas.height * 0.05);
@@ -489,6 +561,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (my_bullets.length > 0){        // displaying my bullets
             for (let i = 0; i < my_bullets.length; i++){
                 my_bullets[i].move();
+                console.log(my_bullets[i].position_x, id, time);
                 ctx.drawImage(bullet_image, my_bullets[i].position_x, my_bullets[i].position_y, bullet_size, bullet_size);
                 // ctx.fillText("*", my_bullets[i].position_x, my_bullets[i].position_y);
             }
@@ -574,15 +647,18 @@ function draw() {  // drawing everything, generating enemies and controll ship
 
         if (play_type == "keyboard"){
             ship.keyboard_move();
-            if (immortality_ticks_left == 0){
-                // ctx.fillText("S", ship.position_x, ship.position_y);
-                ctx.drawImage(ship_image, ship.position_x - player_size / 3, ship.position_y - player_size, player_size * 1.1, player_size);
-            }
-            else {
-                immortality_ticks_left--;
-                // ctx.fillText("IM", ship.position_x, ship.position_y);
-                ctx.drawImage(immortal_ship_image, ship.position_x - player_size / 2, ship.position_y - player_size * 1.1, player_size * 1.6, player_size * 1.3);
-            }
+        }
+        else if (play_type == "mouse"){
+            ship.mouse_move();
+        }
+        if (immortality_ticks_left == 0){
+            // ctx.fillText("S", ship.position_x, ship.position_y);
+            ctx.drawImage(ship_image, ship.position_x - player_size / 3, ship.position_y - player_size, player_size * 1.1, player_size);
+        }
+        else {
+            immortality_ticks_left--;
+            // ctx.fillText("IM", ship.position_x, ship.position_y);
+            ctx.drawImage(immortal_ship_image, ship.position_x - player_size / 2, ship.position_y - player_size * 1.1, player_size * 1.6, player_size * 1.3);
         }
 
         if (ship.health == 0){
@@ -612,7 +688,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
         else if (play_type == "touchscreen"){ // tba
 
         }
-        if (SPressed){
+        if (SPressed && play_type == "keyboard" || LMKPressed && play_type == "mouse"){
             immortality_ticks_left = 0;
             ship.health = 3;
             ship.position_y = canvas.height * 0.95;
@@ -627,6 +703,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
             enemy_bullets = [];
             id = 0;
             game_state = "menu";
+            menu_mouse_delay = 50;
         }
     }
 }
@@ -635,6 +712,9 @@ function draw() {  // drawing everything, generating enemies and controll ship
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
+document.addEventListener("mousemove", mouseMoveHandler, false);
+document.addEventListener("mousedown", mouseKeyDownHandler, false);
+document.addEventListener("mouseup", mouseKeyUpHandler, false);
 
 
 setInterval(draw, 15);
