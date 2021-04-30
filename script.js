@@ -490,9 +490,9 @@ function draw() {  // drawing everything, generating enemies and controll ship
         ctx.fillText("Press space to play with keyboard (R to restart, P to pause)", canvas.width * 0.05, canvas.height * 0.05);
         ctx.fillText("or", canvas.width * 0.2, canvas.height * 0.1);
         ctx.fillText("Press left mouse key to play with mouse", canvas.width * 0.05, canvas.height * 0.15);
-        ctx.fillText("or", canvas.width * 0.2, canvas.height * 0.2);
+        // ctx.fillText("or", canvas.width * 0.2, canvas.height * 0.2);
         ctx.fillStyle = "black";
-        ctx.fillText("Press touchscreen to play", canvas.width * 0.05, canvas.height * 0.25);
+        // ctx.fillText("Press touchscreen to play", canvas.width * 0.05, canvas.height * 0.25);
         ctx.fillText("Best score: " + high_score, canvas.width * 0.2, canvas.height * 0.4)
         if (spacePressed){
             game_state = "playing";
