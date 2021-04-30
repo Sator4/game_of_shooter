@@ -11,22 +11,6 @@ ctx.font = "35px Calibri";
 
 let high_score = 0;
 let heart = "❤️", two_hearts = "❤️❤️", three_hearts = "❤️❤️❤️";
-let sprites = {
-    meteorImg : new Image(),
-    shipImg : new Image(),
-    immortalShipImg : new Image(),
-    enemy1Image : new Image(),
-    Boss1Image : new Image(),
-    
-    initial(){
-        this.meteorImg.src = "images/meteor.png";
-        this.shipImg.src = "images/ship.png";
-        this.immortalShipImg.src = "images/immortal_ship.png";
-        this.enemy1Image.src = "";
-        this.Boss1Image.src = "";
-    }
-}
-
 
 
 let obstacles = [];
@@ -50,13 +34,27 @@ let meteor_size = Math.floor(canvas.width / 30);
 let common_enemy_size = Math.floor(canvas.width / 30);
 let boss_size = Math.floor(canvas.width / 10);
 let player_size = Math.floor(canvas.width / 30);
-let bullet_size = Math.ceil(canvas.width / 400);
+let bullet_size = Math.ceil(canvas.width / 70);
+
+let meteor_image = new Image();
+let enemy_image = new Image();
+let boss_image = new Image();
+let ship_image = new Image();
+let immortal_ship_image = new Image();
+let bullet_image = new Image();
+
+meteor_image.src = "images/meteor.png";
+enemy_image.src = "images/enemy_1.png";
+boss_image.src = "images/boss.png";
+ship_image.src = "images/ship.png";
+immortal_ship_image.src = "images/immortal_ship.png";
+bullet_image.src = "images/bullet.png";
 
 
 class Player {
     constructor () {
         this.health = 3;
-        this.position_y = canvas.height * 0.95;
+        this.position_y = canvas.height * 0.97;
         this.position_x = canvas.width * 0.5;
         this.score = 0;
         this.reload_ticks_left = 0;
@@ -81,7 +79,8 @@ class Player {
             this.reload_ticks_left--;
         }
         for (let i = 0; i < obstacles.length; i++){  // checking collisions with meteors
-            if (((this.position_x + player_size - obstacles[i].position_x)**2 + (this.position_y - obstacles[i].position_y)**2)**0.5 < meteor_size && immortality_ticks_left == 0){
+            if (((this.position_x + player_size - obstacles[i].position_x)**2 + 
+            (this.position_y - obstacles[i].position_y)**2)**0.5 < meteor_size / 2 + player_size / 2 && immortality_ticks_left == 0){
                 this.health--;
                 obstacles[i].health--;
                 immortality_ticks_left = 200;
@@ -99,7 +98,7 @@ class Player {
             }
         }
         if (spacePressed && this.reload_ticks_left == 0){
-            let new_my_bullet = new Bullet(this.position_x, this.position_y, 0, -10, "friend");
+            let new_my_bullet = new Bullet(this.position_x, this.position_y - player_size, 0, -10, "friend");
             this.reload_ticks_left = 15;
         }
     }
@@ -224,7 +223,7 @@ class Enemy extends Danger {
                 this.reload_ticks_left--;
             }
             else {
-                let new_enemy_bullet = new Bullet(this.position_x, this.position_y + boss_size / 2, 0, 5, "foe");
+                let new_enemy_bullet = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 0, 5, "foe");
                 this.reload_ticks_left = 100;
             }
 
@@ -233,9 +232,9 @@ class Enemy extends Danger {
             }
             else {
                 let distance = ((this.position_y - ship.position_y)**2 + (this.position_x - ship.position_x)**2)**0.5;
-                let x_speed = -Math.floor((this.position_x - ship.position_x) * (10 / distance));
-                let y_speed = -Math.floor((this.position_y - ship.position_y) * (10 / distance));
-                let new_unguided_missile = new Bullet(this.position_x, this.position_y + boss_size / 2, x_speed, y_speed, "unguided_missile");
+                let x_speed = -Math.round((this.position_x - ship.position_x) * (10 / distance));
+                let y_speed = -Math.round((this.position_y - ship.position_y) * (10 / distance));
+                let new_bullet = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, x_speed, y_speed * 0.8, "foe");
                 this.reload_special_weapon_ticks_left = 250;
             }
         }
@@ -264,9 +263,9 @@ class Enemy extends Danger {
                 this.reload_ticks_left--;
             }
             else {
-                let new_enemy_bullet_l = new Bullet(this.position_x, this.position_y + boss_size / 2, -3, 5, "foe");
-                let new_enemy_bullet_c = new Bullet(this.position_x, this.position_y + boss_size / 2, 0, 5, "foe");
-                let new_enemy_bullet_r = new Bullet(this.position_x, this.position_y + boss_size / 2, 3, 5, "foe");
+                let new_enemy_bullet_l = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, -3, 5, "foe");
+                let new_enemy_bullet_c = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 0, 5, "foe");
+                let new_enemy_bullet_r = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 3, 5, "foe");
                 this.reload_ticks_left = 200;
             }
 
@@ -274,19 +273,19 @@ class Enemy extends Danger {
                 this.reload_special_weapon_ticks_left--;
             }
             else {
-                let bos_bullet_1 = new Bullet(this.position_x, this.position_y + boss_size / 2, 9, 1, "foe");
-                let bos_bullet_2 = new Bullet(this.position_x, this.position_y + boss_size / 2, 8, 2, "foe");
-                let bos_bullet_3 = new Bullet(this.position_x, this.position_y + boss_size / 2, 7, 3, "foe");
-                let bos_bullet_4 = new Bullet(this.position_x, this.position_y + boss_size / 2, 6, 4, "foe");
-                let bos_bullet_5 = new Bullet(this.position_x, this.position_y + boss_size / 2, 4, 5, "foe");
-                let bos_bullet_6 = new Bullet(this.position_x, this.position_y + boss_size / 2, 2, 6, "foe");
-                let bos_bullet_7 = new Bullet(this.position_x, this.position_y + boss_size / 2, 0, 6, "foe");
-                let bos_bullet_8 = new Bullet(this.position_x, this.position_y + boss_size / 2, -2, 6, "foe");
-                let bos_bullet_9 = new Bullet(this.position_x, this.position_y + boss_size / 2, -4, 5, "foe");
-                let bos_bullet_10 = new Bullet(this.position_x, this.position_y + boss_size / 2, -6, 4, "foe");
-                let bos_bullet_11 = new Bullet(this.position_x, this.position_y + boss_size / 2, -7, 3, "foe");
-                let bos_bullet_12 = new Bullet(this.position_x, this.position_y + boss_size / 2, -8, 2, "foe");
-                let bos_bullet_13 = new Bullet(this.position_x, this.position_y + boss_size / 2, -9, 1, "foe");
+                let bos_bullet_1 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 9, 1, "foe");
+                let bos_bullet_2 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 8, 2, "foe");
+                let bos_bullet_3 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 7, 3, "foe");
+                let bos_bullet_4 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 6, 4, "foe");
+                let bos_bullet_5 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 4, 5, "foe");
+                let bos_bullet_6 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 2, 6, "foe");
+                let bos_bullet_7 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, 0, 6, "foe");
+                let bos_bullet_8 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, -2, 6, "foe");
+                let bos_bullet_9 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, -4, 5, "foe");
+                let bos_bullet_10 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, -6, 4, "foe");
+                let bos_bullet_11 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, -7, 3, "foe");
+                let bos_bullet_12 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, -8, 2, "foe");
+                let bos_bullet_13 = new Bullet(this.position_x - boss_size * 0.1, this.position_y + boss_size / 2, -9, 1, "foe");
                 this.reload_special_weapon_ticks_left = 500;
             }
         }
@@ -308,7 +307,7 @@ class Bullet {
         if (type == "friend"){
             my_bullets.push(this);
         }
-        else {
+        else if (type == "foe"){
             enemy_bullets.push(this);
         }
     }
@@ -339,7 +338,7 @@ class Bullet {
             }
             if (this.exists){
                 for (let i = 0; i < obstacles.length; i++){  // checking collisions with meteors
-                    if (((obstacles[i].position_x - this.position_x)**2 + (obstacles[i].position_y - this.position_y)**2)**0.5 < obstacles[i].width){
+                    if (((obstacles[i].position_x - this.position_x)**2 + (obstacles[i].position_y - this.position_y)**2)**0.5 < obstacles[i].width / 2){
                         obstacles[i].health--;
                         this.delete_this();
                     }
@@ -347,19 +346,19 @@ class Bullet {
             }
             if (this.exists){
                 for (let i = 0; i < enemies.length; i++){   // checking collisions with enemies
-                    if (((enemies[i].position_x - this.position_x)**2 + (enemies[i].position_y - this.position_y)**2)**0.5 < enemies[i].width){
+                    if (((enemies[i].position_x - this.position_x)**2 + (enemies[i].position_y - this.position_y)**2)**0.5 < enemies[i].width / 2){
                         enemies[i].health--;
                         this.delete_this();
                     }
                 }
             }
         }
-        else if (this.type == "foe" || this.type == "unguided_missile"){
+        else if (this.type == "foe"){
             if (this.position_y > canvas.height){  // enemy bullet reaching floor
                 this.delete_this();
             }
             if (this.exists){   // enemy bullet reaching player
-                if (((ship.position_y - this.position_y)**2 + (ship.position_x - this.position_x)**2)**0.5 < player_size){
+                if (((ship.position_y - this.position_y)**2 + (ship.position_x - this.position_x)**2)**0.5 < player_size / 2){
                     if (immortality_ticks_left == 0){
                         ship.health--;
                         immortality_ticks_left = 200;
@@ -434,8 +433,8 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (spacePressed){
             game_state = "playing";
             play_type = "keyboard";
-            game_stage = 1;   // 1
-            waves_left = 2;   // 2
+            game_stage = 2;   // 1
+            waves_left = 1;   // 2
             until_next_wave = 10000;
         }
     }
@@ -474,27 +473,23 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (obstacles.length > 0){  // displaying meteors
             for (let i = 0; i < obstacles.length; i++){
                 obstacles[i].move();
-                //ctx.drawImage(sprites.meteorImg, obstacles[i].position_x, obstacles[i].position_y);
-                ctx.fillText("M", obstacles[i].position_x, obstacles[i].position_y);
+                ctx.drawImage(meteor_image, obstacles[i].position_x - meteor_size / 2, obstacles[i].position_y - meteor_size / 2, meteor_size, meteor_size);
+                //ctx.fillText("M", obstacles[i].position_x, obstacles[i].position_y);
             }
         }
 
         if (enemy_bullets.length > 0){    // displaying bullets
             for (let i = 0; i < enemy_bullets.length; i++){
                 enemy_bullets[i].move();
-                // ctx.beginPath();
-                // ctx.arc(my_bullets[i].position_x, my_bullets[i].position_y, 4, 0, Math.PI*2, true);
-                // ctx.fill();
-                ctx.fillText("*", enemy_bullets[i].position_x, enemy_bullets[i].position_y);
+                ctx.drawImage(bullet_image, enemy_bullets[i].position_x, enemy_bullets[i].position_y, bullet_size, bullet_size);
+                // ctx.fillText("*", enemy_bullets[i].position_x, enemy_bullets[i].position_y);
             }
         }
 
         if (my_bullets.length > 0){        // displaying my bullets
             for (let i = 0; i < my_bullets.length; i++){
                 my_bullets[i].move();
-                ctx.beginPath();
-                ctx.arc(my_bullets[i].position_x, my_bullets[i].position_y, 4, 0, Math.PI*2, true);
-                ctx.fill();
+                ctx.drawImage(bullet_image, my_bullets[i].position_x, my_bullets[i].position_y, bullet_size, bullet_size);
                 // ctx.fillText("*", my_bullets[i].position_x, my_bullets[i].position_y);
             }
         }
@@ -502,7 +497,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (game_stage == 1){
             if ((enemies.length == 0 || until_next_wave == 0) && waves_left > 0){//если волны еще будут и врагов нет или начинается след. волна
                 for (let i = 0; i < 5; i++){
-                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) + 50), -50, "common1", 30, 30);
+                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) + 50), -50, "common1", common_enemy_size, common_enemy_size);
                 }
                 until_next_wave = 1000;
                 waves_left--;
@@ -518,7 +513,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
 
         if (game_stage == 2){
             if (enemies.length == 0 && waves_left > 0){
-                boss = new Enemy(Math.floor(Math.random() * (canvas.width - 500) + 250), -100, "boss1", 50, 50);
+                boss = new Enemy(Math.floor(Math.random() * (canvas.width - 500) + 250), -100, "boss1", boss_size, boss_size);
                 waves_left--;
             }
             enemies[0].move();
@@ -531,7 +526,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (game_stage == 3){
             if ((enemies.length == 0 || until_next_wave == 0) && waves_left > 0){
                 for (let i = 0; i < 5; i++){
-                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) + 50), -50, "common2", 30, 30);
+                    enemy = new Enemy(Math.floor(Math.random() * (canvas.width - 100) + 50), -50, "common2", common_enemy_size, common_enemy_size);
                 }
                 until_next_wave = 1500;
                 waves_left--;
@@ -547,7 +542,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
 
         if (game_stage == 4){
             if (enemies.length == 0 && waves_left > 0){
-                boss = new Enemy(Math.floor(Math.random() * (canvas.width - 500) + 250), -100, "boss2", 50, 50);
+                boss = new Enemy(Math.floor(Math.random() * (canvas.width - 500) + 250), -100, "boss2", boss_size, boss_size);
                 waves_left--;
             }
             enemies[0].move();
@@ -565,12 +560,14 @@ function draw() {  // drawing everything, generating enemies and controll ship
             for (let i = 0; i < enemies.length; i++){
                 enemies[i].move();
                 if (enemies[i].type == "common1" || enemies[i].type == "common2"){
-                    ctx.fillText("E", enemies[i].position_x, enemies[i].position_y);
+                    ctx.drawImage(enemy_image, enemies[i].position_x - common_enemy_size / 3, enemies[i].position_y - common_enemy_size / 2, common_enemy_size, common_enemy_size * 1.5);
+                    // ctx.fillText("E", enemies[i].position_x, enemies[i].position_y);
                 }
                 else if (enemies[i].type == "boss1" || enemies[i].type == "boss2"){
-                    ctx.font = "100px Calibri";
-                    ctx.fillText("B", enemies[i].position_x, enemies[i].position_y);
-                    ctx.font = "35px Calibri";
+                    ctx.drawImage(boss_image, enemies[i].position_x - boss_size / 2, enemies[i].position_y - boss_size / 3, boss_size, boss_size);
+                    // ctx.font = "100px Calibri";
+                    // ctx.fillText("B", enemies[i].position_x, enemies[i].position_y);
+                    // ctx.font = "35px Calibri";
                 }
             }
         }
@@ -578,17 +575,13 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (play_type == "keyboard"){
             ship.keyboard_move();
             if (immortality_ticks_left == 0){
-                // ctx.beginPath();
-                // ctx.arc(ship.position_x, ship.position_y, player_size, 0, Math.PI*2, true);
-                // ctx.fill();
-
-                ctx.fillText("S", ship.position_x, ship.position_y);
-                //ctx.drawImage(sprites.shipImg, ship.position_x, ship.position_y);
+                // ctx.fillText("S", ship.position_x, ship.position_y);
+                ctx.drawImage(ship_image, ship.position_x - player_size / 3, ship.position_y - player_size, player_size * 1.1, player_size);
             }
             else {
                 immortality_ticks_left--;
-                ctx.fillText("IM", ship.position_x, ship.position_y);
-                // ctx.drawImage(sprites.immortalShipImg, ship.position_x, ship.position_y);
+                // ctx.fillText("IM", ship.position_x, ship.position_y);
+                ctx.drawImage(immortal_ship_image, ship.position_x - player_size / 2, ship.position_y - player_size * 1.1, player_size * 1.6, player_size * 1.3);
             }
         }
 
