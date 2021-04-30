@@ -4,3 +4,4 @@
 2.1 - second stage - boss, bigger, has 20 hp, more aspd, has special attact - fires a faster bullet in the direction of the player; win menu, each saved hp gives 1000 additional score points
 2.2 - added second stage and second boss
 2.2.1 - fixed enemy spawning
+2.3 - added pause and restart

@@ -1,6 +1,7 @@
 // deifine meteor asteroid; meteor was just easier to write and read
 
-//const { threadId } = require("node:worker_threads");
+
+
 
 let canvas = document.getElementById("playground");
 canvas.width  = window.innerWidth * 0.985;
@@ -43,9 +44,13 @@ let id = 0;
 let game_state = "menu";
 let play_type = "none";
 
-let SPressed, rightPressed, leftPressed, spacePressed, LMKPressed, RMKPressed, screenPressed = false;
+let PPressed, RPressed, SPressed, rightPressed, leftPressed, spacePressed, LMKPressed, RMKPressed, screenPressed = false;
 
-
+let meteor_size = Math.floor(canvas.width / 30);
+let common_enemy_size = Math.floor(canvas.width / 30);
+let boss_size = Math.floor(canvas.width / 10);
+let player_size = Math.floor(canvas.width / 30);
+let bullet_size = Math.ceil(canvas.width / 400);
 
 
 class Player {
@@ -57,11 +62,26 @@ class Player {
         this.reload_ticks_left = 0;
     }
     keyboard_move() {
+        if (RPressed){
+            this.health = 3;
+            this.position_y = canvas.height * 0.95;
+            this.position_x = canvas.width * 0.5;
+            this.score = 0;
+            this.reload_ticks_left = 0;
+            enemies = [];
+            enemy_bullets = [];
+            my_bullets = [];
+            obstacles = [];
+            game_state = "menu";
+        }
+        if (PPressed){
+        }
+
         if (this.reload_ticks_left > 0){  // reloading
             this.reload_ticks_left--;
         }
         for (let i = 0; i < obstacles.length; i++){  // checking collisions with meteors
-            if (((this.position_x - obstacles[i].position_x)**2 + (this.position_y - obstacles[i].position_y)**2)**0.5 < 30 && immortality_ticks_left == 0){
+            if (((this.position_x + player_size - obstacles[i].position_x)**2 + (this.position_y - obstacles[i].position_y)**2)**0.5 < meteor_size && immortality_ticks_left == 0){
                 this.health--;
                 obstacles[i].health--;
                 immortality_ticks_left = 200;
@@ -69,17 +89,17 @@ class Player {
             }
         }
         if (rightPressed){  // moving ship left and right via <- ->
-            if (this.position_x < canvas.width - 30){
+            if (this.position_x < canvas.width - player_size){
                 this.position_x += 5;
             }
         }
         if (leftPressed) {
-            if (this.position_x >= 30){
+            if (this.position_x >= player_size){
                 this.position_x -= 5;
             }
         }
         if (spacePressed && this.reload_ticks_left == 0){
-            let new_my_bullet = new Bullet(this.position_x + 10, this.position_y + 10, 0, -10, "friend");
+            let new_my_bullet = new Bullet(this.position_x, this.position_y, 0, -10, "friend");
             this.reload_ticks_left = 15;
         }
     }
@@ -101,7 +121,7 @@ class Danger {
 
 class Obstacle extends Danger {
     constructor (position_x, position_y, dx){
-        super(position_x, position_y, "meteor", 30, 30);
+        super(position_x, position_y, "meteor", meteor_size, meteor_size);
         this.dx = dx;
         this.dy = 2;
         this.health = 5;
@@ -113,7 +133,7 @@ class Obstacle extends Danger {
         if (this.health == 0){
             ship.score += 10;
         }
-        if (this.position_y > canvas.height + 30 || this.position_x < 0 || this.position_x > canvas.width || this.health <= 0){
+        if (this.position_y > canvas.height || this.position_x < 0 || this.position_x > canvas.width || this.health <= 0){
             for (let i = 0; i < obstacles.length; i++){
                 if (obstacles[i].id == this.id){
                     obstacles.splice(i, 1);
@@ -171,13 +191,13 @@ class Enemy extends Danger {
     move(){
         this.position_x += this.dx;
         this.position_y += this.dy;
-        if (this.position_x < 30 || this.position_x > canvas.width - 30){
+        if (this.position_x < common_enemy_size || this.position_x > canvas.width - common_enemy_size){
             this.dx = -this.dx;
         }
         if (this.position_y > canvas.height / 2){
             this.dy = -this.dy;
         }
-        if (this.position_y < 30 && this.dy < 0){
+        if (this.position_y < common_enemy_size && this.dy < 0){
             this.dy = -this.dy;
         }
 
@@ -190,7 +210,7 @@ class Enemy extends Danger {
                 this.reload_ticks_left--;
             }
             else {
-                let new_enemy_bullet = new Bullet(this.position_x, this.position_y + 30, 0, 3, "foe");
+                let new_enemy_bullet = new Bullet(this.position_x, this.position_y + common_enemy_size / 2, 0, 3, "foe");
                 this.reload_ticks_left = 150;
             }
         }
@@ -204,7 +224,7 @@ class Enemy extends Danger {
                 this.reload_ticks_left--;
             }
             else {
-                let new_enemy_bullet = new Bullet(this.position_x, this.position_y + 50, 0, 5, "foe");
+                let new_enemy_bullet = new Bullet(this.position_x, this.position_y + boss_size / 2, 0, 5, "foe");
                 this.reload_ticks_left = 100;
             }
 
@@ -215,7 +235,7 @@ class Enemy extends Danger {
                 let distance = ((this.position_y - ship.position_y)**2 + (this.position_x - ship.position_x)**2)**0.5;
                 let x_speed = -Math.floor((this.position_x - ship.position_x) * (10 / distance));
                 let y_speed = -Math.floor((this.position_y - ship.position_y) * (10 / distance));
-                let new_unguided_missile = new Bullet(this.position_x, this.position_y + 50, x_speed, y_speed, "unguided_missile");
+                let new_unguided_missile = new Bullet(this.position_x, this.position_y + boss_size / 2, x_speed, y_speed, "unguided_missile");
                 this.reload_special_weapon_ticks_left = 250;
             }
         }
@@ -229,8 +249,8 @@ class Enemy extends Danger {
                 this.reload_ticks_left--;
             }
             else {
-                let new_enemy_bullet_1 = new Bullet(this.position_x + 20, this.position_y + 30, 0, 3, "foe");
-                let new_enemy_bullet_2 = new Bullet(this.position_x - 20, this.position_y + 30, 0, 3, "foe");
+                let new_enemy_bullet_1 = new Bullet(this.position_x + common_enemy_size / 2, this.position_y + common_enemy_size / 2, 0, 3, "foe");
+                let new_enemy_bullet_2 = new Bullet(this.position_x - common_enemy_size / 2, this.position_y + common_enemy_size / 2, 0, 3, "foe");
                 this.reload_ticks_left = 150;
             }
         }
@@ -244,9 +264,9 @@ class Enemy extends Danger {
                 this.reload_ticks_left--;
             }
             else {
-                let new_enemy_bullet_l = new Bullet(this.position_x, this.position_y + 50, -3, 5, "foe");
-                let new_enemy_bullet_c = new Bullet(this.position_x, this.position_y + 50, 0, 5, "foe");
-                let new_enemy_bullet_r = new Bullet(this.position_x, this.position_y + 50, 3, 5, "foe");
+                let new_enemy_bullet_l = new Bullet(this.position_x, this.position_y + boss_size / 2, -3, 5, "foe");
+                let new_enemy_bullet_c = new Bullet(this.position_x, this.position_y + boss_size / 2, 0, 5, "foe");
+                let new_enemy_bullet_r = new Bullet(this.position_x, this.position_y + boss_size / 2, 3, 5, "foe");
                 this.reload_ticks_left = 200;
             }
 
@@ -254,19 +274,19 @@ class Enemy extends Danger {
                 this.reload_special_weapon_ticks_left--;
             }
             else {
-                let bos_bullet_1 = new Bullet(this.position_x, this.position_y + 50, 9, 1, "foe");
-                let bos_bullet_2 = new Bullet(this.position_x, this.position_y + 50, 8, 2, "foe");
-                let bos_bullet_3 = new Bullet(this.position_x, this.position_y + 50, 7, 3, "foe");
-                let bos_bullet_4 = new Bullet(this.position_x, this.position_y + 50, 6, 4, "foe");
-                let bos_bullet_5 = new Bullet(this.position_x, this.position_y + 50, 4, 5, "foe");
-                let bos_bullet_6 = new Bullet(this.position_x, this.position_y + 50, 2, 6, "foe");
-                let bos_bullet_7 = new Bullet(this.position_x, this.position_y + 50, 0, 6, "foe");
-                let bos_bullet_8 = new Bullet(this.position_x, this.position_y + 50, -2, 6, "foe");
-                let bos_bullet_9 = new Bullet(this.position_x, this.position_y + 50, -4, 5, "foe");
-                let bos_bullet_10 = new Bullet(this.position_x, this.position_y + 50, -6, 4, "foe");
-                let bos_bullet_11 = new Bullet(this.position_x, this.position_y + 50, -7, 3, "foe");
-                let bos_bullet_12 = new Bullet(this.position_x, this.position_y + 50, -8, 2, "foe");
-                let bos_bullet_13 = new Bullet(this.position_x, this.position_y + 50, -9, 1, "foe");
+                let bos_bullet_1 = new Bullet(this.position_x, this.position_y + boss_size / 2, 9, 1, "foe");
+                let bos_bullet_2 = new Bullet(this.position_x, this.position_y + boss_size / 2, 8, 2, "foe");
+                let bos_bullet_3 = new Bullet(this.position_x, this.position_y + boss_size / 2, 7, 3, "foe");
+                let bos_bullet_4 = new Bullet(this.position_x, this.position_y + boss_size / 2, 6, 4, "foe");
+                let bos_bullet_5 = new Bullet(this.position_x, this.position_y + boss_size / 2, 4, 5, "foe");
+                let bos_bullet_6 = new Bullet(this.position_x, this.position_y + boss_size / 2, 2, 6, "foe");
+                let bos_bullet_7 = new Bullet(this.position_x, this.position_y + boss_size / 2, 0, 6, "foe");
+                let bos_bullet_8 = new Bullet(this.position_x, this.position_y + boss_size / 2, -2, 6, "foe");
+                let bos_bullet_9 = new Bullet(this.position_x, this.position_y + boss_size / 2, -4, 5, "foe");
+                let bos_bullet_10 = new Bullet(this.position_x, this.position_y + boss_size / 2, -6, 4, "foe");
+                let bos_bullet_11 = new Bullet(this.position_x, this.position_y + boss_size / 2, -7, 3, "foe");
+                let bos_bullet_12 = new Bullet(this.position_x, this.position_y + boss_size / 2, -8, 2, "foe");
+                let bos_bullet_13 = new Bullet(this.position_x, this.position_y + boss_size / 2, -9, 1, "foe");
                 this.reload_special_weapon_ticks_left = 500;
             }
         }
@@ -339,7 +359,7 @@ class Bullet {
                 this.delete_this();
             }
             if (this.exists){   // enemy bullet reaching player
-                if (((ship.position_y - this.position_y)**2 + (ship.position_x - this.position_x)**2)**0.5 < 30){
+                if (((ship.position_y - this.position_y)**2 + (ship.position_x - this.position_x)**2)**0.5 < player_size){
                     if (immortality_ticks_left == 0){
                         ship.health--;
                         immortality_ticks_left = 200;
@@ -368,6 +388,12 @@ function keyDownHandler(e) {
     else if (e.keyCode == 32) {
         spacePressed = true;
     }
+    else if (e.keyCode == 82){
+        RPressed = true;
+    }
+    else if (e.keyCode == 80){
+        PPressed = true;
+    }
 }
 
 function keyUpHandler(e) {
@@ -383,6 +409,12 @@ function keyUpHandler(e) {
     else if (e.keyCode == 32) {
         spacePressed = false;
     }
+    else if (e.keyCode == 82){
+        RPressed = false;
+    }
+    else if (e.keyCode == 80){
+        PPressed = false;
+    }
 }
 
 
@@ -391,18 +423,32 @@ let ship = new Player();
 function draw() {  // drawing everything, generating enemies and controll ship
     if (game_state == "menu"){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillText("Press space to play with keyboard", canvas.width * 0.05, canvas.height * 0.05);
+        ctx.fillStyle = "white";
+        ctx.fillText("Press space to play with keyboard (R to restart, P to pause)", canvas.width * 0.05, canvas.height * 0.05);
         ctx.fillText("or", canvas.width * 0.2, canvas.height * 0.1);
         ctx.fillText("Press left mouse key to play with mouse", canvas.width * 0.05, canvas.height * 0.15);
         ctx.fillText("or", canvas.width * 0.2, canvas.height * 0.2);
+        ctx.fillStyle = "black";
         ctx.fillText("Press touchscreen to play", canvas.width * 0.05, canvas.height * 0.25);
         ctx.fillText("Best score: " + high_score, canvas.width * 0.2, canvas.height * 0.4)
         if (spacePressed){
             game_state = "playing";
             play_type = "keyboard";
-            game_stage = 1;
-            waves_left = 2;
+            game_stage = 1;   // 1
+            waves_left = 2;   // 2
             until_next_wave = 10000;
+        }
+    }
+    else if (game_state == "pause"){
+        ctx.textAlign = "center";
+        ctx.font = "50px Calibri";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillText("Pause", canvas.width * 0.5, canvas.height * 0.3);
+        ctx.font = "35px Calibri";
+        ctx.fillText("Press space to resume",  canvas.width * 0.5, canvas.height * 0.4)
+        ctx.textAlign = "start";
+        if (spacePressed){
+            game_state = "playing";
         }
     }
     else if (game_state == "playing"){
@@ -419,6 +465,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
             ctx.fillText(heart, canvas.width * 0.9, 50);
         }
 
+        
         if (obstacles.length < 2){  // generating a meteor
             let new_obstacle_position_x = Math.floor(Math.random() * canvas.width); // x position of new asteroid
             let new_dx = Math.floor(Math.random() * 4) - 2;
@@ -435,15 +482,18 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (enemy_bullets.length > 0){    // displaying bullets
             for (let i = 0; i < enemy_bullets.length; i++){
                 enemy_bullets[i].move();
+                // ctx.beginPath();
+                // ctx.arc(my_bullets[i].position_x, my_bullets[i].position_y, 4, 0, Math.PI*2, true);
+                // ctx.fill();
                 ctx.fillText("*", enemy_bullets[i].position_x, enemy_bullets[i].position_y);
             }
         }
 
-        if (my_bullets.length > 0){        // displaying bullets
+        if (my_bullets.length > 0){        // displaying my bullets
             for (let i = 0; i < my_bullets.length; i++){
                 my_bullets[i].move();
                 ctx.beginPath();
-                ctx.arc(my_bullets[i].position_x, my_bullets[i].position_y - 30, 4, 0, Math.PI*2, true);
+                ctx.arc(my_bullets[i].position_x, my_bullets[i].position_y, 4, 0, Math.PI*2, true);
                 ctx.fill();
                 // ctx.fillText("*", my_bullets[i].position_x, my_bullets[i].position_y);
             }
@@ -474,7 +524,7 @@ function draw() {  // drawing everything, generating enemies and controll ship
             enemies[0].move();
             if (enemies.length == 0){
                 game_stage = 3;
-                waves_left = 4;
+                waves_left = 2;
             }
         }
 
@@ -511,9 +561,6 @@ function draw() {  // drawing everything, generating enemies and controll ship
             ship.score += ship.health * 1000;
         }
 
-
-
-
         if (enemies.length > 0){
             for (let i = 0; i < enemies.length; i++){
                 enemies[i].move();
@@ -531,6 +578,10 @@ function draw() {  // drawing everything, generating enemies and controll ship
         if (play_type == "keyboard"){
             ship.keyboard_move();
             if (immortality_ticks_left == 0){
+                // ctx.beginPath();
+                // ctx.arc(ship.position_x, ship.position_y, player_size, 0, Math.PI*2, true);
+                // ctx.fill();
+
                 ctx.fillText("S", ship.position_x, ship.position_y);
                 //ctx.drawImage(sprites.shipImg, ship.position_x, ship.position_y);
             }
